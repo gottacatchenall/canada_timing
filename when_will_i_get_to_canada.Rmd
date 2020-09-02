@@ -43,7 +43,7 @@ I applied for a study-permit from the Canadian government's office of immigratio
 This value, which we'll call $E$, was **11 weeks**/**77 days** when I submitted my application. To estimate when my application will be complete, I briefly discuss how cumulative distributions work, and then propose and use several candidates for the true distribution of processing times to estimate when my application will be done.
 
 
-# Understanding Cumulative Distributions {#sec:cumul}
+# Cumulative Distributions {#sec:cumul}
 
 To estimate the time it will take until my application is processed, its worth considering what the value of $E$ really means. It is a _cumulative_ measure of probability, which can have bizarre properties.
 
@@ -51,7 +51,7 @@ To estimate this value, the office must be taking a set of applications they hav
 
 We call the probability that the amount of time to process an application is exactly $t$ is the probability-density function (pdf), $\pi(t)$. (For example, the pdf for rolling a dice $\pi_{Dice}(x) = \frac{1}{6}$ for all values of $x = \{1,2,3,4,5,6\}$.
 
-From this, we can get our cumalitive distribution function (cdf), $F(t)$, which gives us the probability that a sample from $T$ is less than $t$. The cdf $\Pi(t)$ is defined as $$\Pi(T) = \int_{-\infty}^T \pi(t) dt$$
+From this, we can get our cumalitive distribution function (cdf), $\Pi(t)$, which gives us the probability that a sample from $T$ is less than $t$. The cdf $\Pi(t)$ is defined as $$\Pi(T) = \int_{-\infty}^T \pi(t) dt$$
 
 
 We know that $\Pi(\text{77 days}) = 0.8$, and therefore we can place a constraint on the distribution of processing times $\pi(t)$, which is that
