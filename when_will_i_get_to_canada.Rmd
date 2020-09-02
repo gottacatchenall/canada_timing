@@ -21,7 +21,12 @@ library(ggthemr)
 library(latex2exp)
 library(extrafont)
 convert_to_tex_label = function(string) {
+  if (is.na(string) == F){
   return(TeX(string))
+  }
+  else{
+    return("na")
+  }
 }
 cmuserif = pdfFonts()$`CMU Serif`$family
 thm = theme(panel.border = element_rect(colour = "#222222", fill = NA, size=0.75),
@@ -137,11 +142,7 @@ sample_arrival_date = function(alpha){
 
 sample_arrival_distribution_uniform = function(min=0.5, max=5, n_samples =1000) {
   times = rep(0,n_samples)
-  
-  if (min > max){
-    min = max
-  }
-  
+
   for (t in 1:n_samples) {  
     alpha = runif(1, min=min, max=max)
     time = sample_arrival_date(alpha)
@@ -156,20 +157,21 @@ sample_arrival_distribution_uniform = function(min=0.5, max=5, n_samples =1000) 
 
 ```{r warning=FALSE}
 data.frame(min_alpha = c(0.8,3,5)) %>%
-  crossing(max_alpha=c(5,7,10)) %>%
+  crossing(max_alpha=c(3,7,10)) %>%
+    mutate(min_facet = paste('$\\alpha_{min} = ', min_alpha ,'$', sep='')) %>%
+  mutate(max_facet = paste('$\\alpha_{max} = ', max_alpha ,'$', sep='')) %>%
+  mutate(max_facet = factor(max_facet, levels=c("$\\alpha_{max} = 3$","$\\alpha_{max} = 7$","$\\alpha_{max} = 10$"))) %>%
   group_by(min_alpha, max_alpha) %>%
+  filter((min_alpha <= max_alpha) == T) %>%
   do(cbind(., sample_arrival_distribution_uniform(min=.$min_alpha, max=.$max_alpha), by=c("min_alpha", "max_alpha"))) %>%
   mutate(arrival_time_in_days = arrival_time*S_days) %>%
   mutate(mean_arriv_time = as.Date(as.Date(start_date) + mean(arrival_time_in_days))) %>%
   mutate(arrival_date = as.Date(as.Date(start_date) + arrival_time_in_days)) %>%
-  mutate(min_facet = paste('$\\alpha_{min} = ', min_alpha ,'$', sep='')) %>%
-  mutate(max_facet = paste('$\\alpha_{max} = ', max_alpha ,'$', sep='')) %>%
-    mutate(max_facet = factor(max_facet, levels=c("$\\alpha_{max} = 5$","$\\alpha_{max} = 7$","$\\alpha_{max} = 10$"))) %>%
   ggplot(aes(arrival_date, group=interaction(min_alpha, max_alpha))) +
     geom_density() +
     scale_x_date(limits=c(as.Date("2020-08-01"), as.Date("2020-12-01")), breaks="month", minor_breaks="2 weeks", date_labels = "%B") +
     geom_vline(aes(xintercept=mean_arriv_time), linetype='dashed') +
-    facet_grid(vars(max_facet), vars(min_facet), labeller=as_labeller(convert_to_tex_label, label_parsed)) +
+    facet_grid(vars(max_facet), vars(min_facet),labeller=as_labeller(convert_to_tex_label, label_parsed)) +
     labs(x='', y='probability of permit arriving') +
     thm +
     theme(axis.text.x = element_text(size=8, angle = 90))
