@@ -150,8 +150,8 @@ sample_arrival_distribution_uniform = function(min=0.5, max=5, n_samples = 1000)
 ```
 
 ```{r warning=FALSE}
-data.frame(min_alpha = c(0.5, 1, 2)) %>%
-  crossing(max_alpha=c(2.5, 4, 5.5)) %>%
+data.frame(min_alpha = c(1, 2, 3)) %>%
+  crossing(max_alpha=c(3, 4, 5)) %>%
   mutate(min_facet = paste('$ \\alpha_{min} = ', min_alpha ,'$', sep='')) %>%
   mutate(max_facet = paste('$ \\alpha_{max} = ', max_alpha ,'$', sep='')) %>%
   rowwise() %>%
