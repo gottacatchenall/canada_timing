@@ -176,3 +176,48 @@ data.frame(min_alpha = c(0.8,3,5)) %>%
     thm +
     theme(axis.text.x = element_text(size=8, angle = 90))
 ```
+
+
+What then, about the _cumulative_ distribution of _arrival time_---that is, given some time $t$, what is the probability that I will have received the notice by that point? 
+
+
+
+
+```{r warning=FALSE}
+get_cumulative_prob_of_arriv = function(arrival_times){
+  ret = rep(0, length(arrival_times))
+  i = 1
+  for (t in arrival_times){
+    ct = 0
+    for (t2 in arrival_times){
+      if (t < t2){
+        ct = ct + 1
+      }
+    }
+    ret[i] = 1.0 - ct/length(arrival_times)
+    i = i + 1
+  }
+  return (ret)
+}
+
+data.frame(min_alpha = c(0.8,3,5)) %>%
+  crossing(max_alpha=c(3,7,10)) %>%
+    mutate(min_facet = paste('$\\alpha_{min} = ', min_alpha ,'$', sep='')) %>%
+  mutate(max_facet = paste('$\\alpha_{max} = ', max_alpha ,'$', sep='')) %>%
+  mutate(max_facet = factor(max_facet, levels=c("$\\alpha_{max} = 3$","$\\alpha_{max} = 7$","$\\alpha_{max} = 10$"))) %>%
+  group_by(min_alpha, max_alpha) %>%
+  filter((min_alpha <= max_alpha) == T) %>%
+  do(cbind(., sample_arrival_distribution_uniform(min=.$min_alpha, max=.$max_alpha), by=c("min_alpha", "max_alpha"))) %>%
+  mutate(arrival_time_in_days = arrival_time*S_days) %>%
+  mutate(arrival_date = as.Date(as.Date(start_date) + arrival_time_in_days)) %>%
+  mutate(cumulative_prob_of_arriv = get_cumulative_prob_of_arriv(arrival_time_in_days) ) %>%
+    ggplot(aes(arrival_date, cumulative_prob_of_arriv, group=interaction(min_alpha, max_alpha))) +
+    geom_point() +
+    scale_x_date(limits=c(as.Date("2020-08-01"), as.Date("2020-12-01")), breaks="month", minor_breaks="2 weeks", date_labels = "%B") +    facet_grid(vars(max_facet), vars(min_facet),labeller=as_labeller(convert_to_tex_label, label_parsed)) +
+    labs(x='', y='probability of permit arriving') +
+    thm +
+    theme(axis.text.x = element_text(size=8, angle = 90))
+```
+
+
+
