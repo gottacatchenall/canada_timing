@@ -24,7 +24,7 @@ convert_to_tex_label = function(string) {
   return(TeX(string))
 }
 cmuserif = pdfFonts()$`CMU Serif`$family
-thm = theme(panel.border = element_rect(colour = "#222222", fill = NA, size=0.75), 
+thm = theme(panel.border = element_rect(colour = "#222222", fill = NA, size=0.75),
             panel.spacing=unit(3, "lines"),
             text=element_text(family=cmuserif,size=14),
             axis.title = element_text(margin = margin(t = 20, r = 20, b = 0, l = 0)),
@@ -39,25 +39,25 @@ ggthemr('fresh', spacing=2)
 
 # Introduction {#sec:intro}
 
-I applied for a study-permit from the Canadian government's office of immigration on **July 30, 2020**. The processing time estimate is presented as the time it takes for the office to complete **80%** of the applications it has at any given time. 
-This value, which we'll call $E$, was **11 weeks**/**77 days** when I submitted my application. To estimate when my application will be complete, I briefly discuss how cumulative distributions work, and then propose and use several candidates for the true distribution of processing times to estimate when my application will be done. 
+I applied for a study-permit from the Canadian government's office of immigration on **July 30, 2020**. The processing time estimate is presented as the time it takes for the office to complete **80%** of the applications it has at any given time.
+This value, which we'll call $E$, was **11 weeks**/**77 days** when I submitted my application. To estimate when my application will be complete, I briefly discuss how cumulative distributions work, and then propose and use several candidates for the true distribution of processing times to estimate when my application will be done.
 
 
 # Understanding Cumulative Distributions {#sec:cumul}
 
-To estimate the time it will take until my application is processed, its worth considering what the value of $E$ really means. It is a _cumulative_ measure of probability, which can have bizzare properties. 
+To estimate the time it will take until my application is processed, its worth considering what the value of $E$ really means. It is a _cumulative_ measure of probability, which can have bizarre properties.
 
 To estimate this value, the office must be taking a set of applications they have completed in the past and considering the amount of time it took them to complete each application, $\{t_1, t_2, \dots \}$. These values are all samples from the distribution of processing times, which we'll call $T$.
 
-We call the probability that the amount of time to process an application is exactly $t$ is the probability-density function (pdf), $\pi(t)$. (For example, the pdf for rolling a dice $\pi_{Dice}(x) = \frac{1}{6}$ for all values of $x = \{1,2,3,4,5,6\}$. 
+We call the probability that the amount of time to process an application is exactly $t$ is the probability-density function (pdf), $\pi(t)$. (For example, the pdf for rolling a dice $\pi_{Dice}(x) = \frac{1}{6}$ for all values of $x = \{1,2,3,4,5,6\}$.
 
 From this, we can get our cumalitive distribution function (cdf), $F(t)$, which gives us the probability that a sample from $T$ is less than $t$. The cdf $\Pi(t)$ is defined as $$\Pi(t) = \int_{-\infty}^t \pi(t) dt$$
 
 
-We know that $\Pi(\text{77 days}) = 0.8$, and therefore we can place a constaint on the distribution of processing times $\pi(t)$, which is that 
+We know that $\Pi(\text{77 days}) = 0.8$, and therefore we can place a constraint on the distribution of processing times $\pi(t)$, which is that
 $$\Pi(\text{77 days}) = \int_{0}^{77 \ \text{days}} \pi(t) dt   = 0.8$$
 
-We can now use this constaint to place restrictions on the shape of the distribution of processing times, $\pi(t)$. 
+We can now use this constaint to place restrictions on the shape of the distribution of processing times, $\pi(t)$.
 
 # Processing Times Distributions {#sec:proc}
 
@@ -70,22 +70,22 @@ $\alpha$ and $\beta$, and is defined by the pdf
 
 $$\pi_\Gamma(x) = \frac{\beta ^ \alpha}{\Gamma(\alpha)} x^{\alpha -1} e^{-\beta x} $$
 
-where $\Gamma(\alpha)$ is the Gamma function 
+where $\Gamma(\alpha)$ is the Gamma function
 
 $$\Gamma(\alpha) = \int_0^\infty x^{\alpha-1} e^{-x} dx$$
 
-The cdf for the Gamma distribution is also analytically solvable as 
+The cdf for the Gamma distribution is also analytically solvable as
 
-$$\Pi(x) = \frac{\gamma(\alpha, \beta x) } {\Gamma(\alpha)} $$ 
+$$\Pi(x) = \frac{\gamma(\alpha, \beta x) } {\Gamma(\alpha)} $$
 where $\gamma$ is the _incomplete_-Gamma function,
 
 $$\gamma(s,x) = \int_0^x t^{s-1} e^{-t} dt$$
 
-This allows us again to set the constaint
+This allows us again to set the constraint
 
 $$ \Pi(\text{77 days}) = 0.8 = \frac{\gamma(\alpha, 77 \beta ) } {\Gamma(\alpha)}  $$
 
-Here, then, we have one degree of freedom over our parameter $\alpha$, and without any further data, we have no methods by which to estimate it, and must resort testing a variety of values. Example gamma distributions that meet our constraint are shown below 
+Here, then, we have one degree of freedom over our parameter $\alpha$, and without any further data, we have no methods by which to estimate it, and must resort testing a variety of values. Example gamma distributions that meet our constraint are shown below
 
 
 
@@ -106,17 +106,20 @@ get_beta_under_constraint = function(alpha){
 potential_alphas = c(0.8, 1,3, 5, 10)
 S_days =77
 start_date = "2020-07-30"
-df = data.frame(start_date=as.Date(c(start_date))) %>% 
+df = data.frame(start_date=as.Date(c(start_date))) %>%
   crossing(data.frame(alpha=potential_alphas)) %>%
   mutate(beta=sapply(alpha, get_beta_under_constraint)) %>%
   crossing(data.frame(time_in_unit_of_S = seq(0,2,by=0.01))) %>%
   mutate(arrival_probability = dgamma(time_in_unit_of_S,alpha,beta)) %>%
   mutate(days_since_application=time_in_unit_of_S*S_days) %>%
-  mutate(date = as.Date(start_date + days_since_application)) %>% 
+  mutate(date = as.Date(start_date + days_since_application)) %>%
   mutate(variance = alpha/beta^2)
 
 ggplot(df, aes(date, arrival_probability, color=factor(alpha))) + geom_line() + thm + labs(x='', y='probability of permit arriving', color=TeX('$\\alpha$'))
 ```
+
+
+## $\alpha$ from priors
 
 
 If we set priors on $\alpha$, we can then estimate the arrival date.
@@ -139,25 +142,24 @@ sample_arrival_distribution_uniform = function(min=0.5, max=5, n_samples = 1000)
     time = sample_arrival_date(alpha)
     times[t] = time
   }
-  
+
   df = data.frame(min_alpha=c(min), max_alpha=c(max)) %>% crossing(data.frame(arrival_time=times))
-  
+
   return(df)
 }
 ```
 
-## $\alpha$ from priors
 ```{r warning=FALSE}
-data.frame(min_alpha = c(0.5, 1, 2)) %>% 
+data.frame(min_alpha = c(0.5, 1, 2)) %>%
   crossing(max_alpha=c(2.5, 4, 5.5)) %>%
   mutate(min_facet = paste('$ \\alpha_{min} = ', min_alpha ,'$', sep='')) %>%
   mutate(max_facet = paste('$ \\alpha_{max} = ', max_alpha ,'$', sep='')) %>%
-  rowwise() %>% 
+  rowwise() %>%
   do(cbind(., sample_arrival_distribution_uniform(min=.$min_alpha, max=.$max_alpha), by=c("min_alpha", "max_alpha"))) %>%
-  mutate(arrival_time_in_days = arrival_time*S_days) %>% 
+  mutate(arrival_time_in_days = arrival_time*S_days) %>%
   mutate(arrival_date = as.Date(as.Date(start_date) + arrival_time_in_days)) %>%
-  ggplot(aes(arrival_date, group=interaction(min_alpha, max_alpha))) + 
-    geom_density() + 
+  ggplot(aes(arrival_date, group=interaction(min_alpha, max_alpha))) +
+    geom_density() +
     scale_x_date(limits=c(as.Date("2020-08-01"), as.Date("2020-12-01"))) +
     geom_vline(aes(xintercept=as.Date(as.Date(start_date) + 77)), color='black', linetype='dashed') +
     facet_grid(vars(max_facet), vars(min_facet), labeller=as_labeller(convert_to_tex_label, label_parsed)) +
